@@ -1,7 +1,6 @@
 object Form1: TForm1
   Left = 0
   Top = 0
-  AutoSize = True
   BorderStyle = bsToolWindow
   Caption = 'GifCapture'
   ClientHeight = 25
@@ -12,6 +11,7 @@ object Form1: TForm1
   Font.Height = -12
   Font.Name = 'Segoe UI'
   Font.Style = []
+  FormStyle = fsStayOnTop
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnDestroy = FormDestroy
@@ -35,7 +35,6 @@ object Form1: TForm1
     Font.Style = []
     ParentFont = False
     Spacing = 0
-    ExplicitWidth = 624
   end
   object ActionManager1: TActionManager
     ActionBars = <

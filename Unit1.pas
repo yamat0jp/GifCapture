@@ -126,7 +126,10 @@ end;
 
 procedure TForm1.Action1Execute(Sender: TObject);
 begin
+  if Assigned(task) then
+    Exit;
   Caption:=Format(title,['[˜^‰æ’†]']);
+  WindowState:=TWindowState.wsMinimized;
   List.Clear;
   Timer1.Enabled:=true;
 end;
@@ -152,6 +155,8 @@ begin
   else
   begin
     Caption:=Format(title,['[ˆ—’†]']);
+    WindowState:=TWindowState.wsNormal;
+    Application.ProcessMessages;
     Timer1.Enabled:=false;
     task:=TTask.Run(
       procedure
