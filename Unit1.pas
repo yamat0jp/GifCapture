@@ -85,6 +85,48 @@ begin
   end;
 end;
 
+function RunConsoleCommand(const Command: string): Boolean;
+var
+  StartupInfo: TStartupInfo;
+  ProcessInfo: TProcessInformation;
+  CmdLine: string;
+begin
+  Result := False;
+
+  // 構造体の初期化
+  ZeroMemory(@StartupInfo, SizeOf(StartupInfo));
+  StartupInfo.cb := SizeOf(StartupInfo);
+  StartupInfo.dwFlags := STARTF_USESHOWWINDOW;
+  StartupInfo.wShowWindow := SW_HIDE; // ウィンドウを非表示にする
+
+  // CreateProcessは第2引数の文字列を書き換える可能性があるため、独立したメモリを確保
+  CmdLine := Command;
+  UniqueString(CmdLine);
+
+  // プロセスの起動
+  if CreateProcess(
+    nil,
+    PChar(CmdLine), // 実行するコマンド
+    nil,
+    nil,
+    False,
+    CREATE_NO_WINDOW, // コンソール画面を生成しないフラグ
+    nil,
+    nil, // 実行ディレクトリ（nilなら現在のディレクトリ）
+    StartupInfo,
+    ProcessInfo) then
+  begin
+    // プロセスが終了するまで待機する
+    WaitForSingleObject(ProcessInfo.hProcess, INFINITE);
+
+    // メモリリークを防ぐためにハンドルを閉じる
+    CloseHandle(ProcessInfo.hProcess);
+    CloseHandle(ProcessInfo.hThread);
+
+    Result := True;
+  end;
+end;
+
 procedure SaveBitmapsToAnimatedGIF(const Bitmaps: array of TBitmap; const FileName: string);
 var
   GIF: TGIFImage;
@@ -105,7 +147,7 @@ begin
     // アニメーションのループ設定（0 = 無限ループ）
     // ※Netscape拡張ブロックを追加してループ回数を指定します
     TGIFAppExtNSLoop.Create(Frame).Loops:=0;
-    TGIFGraphicControlExtension.Create(Frame).Delay:=100;
+    TGIFGraphicControlExtension.Create(Frame).Delay:=50;
 
     // GIFファイルとして書き出し
     GIF.SaveToFile(FileName);
@@ -163,6 +205,7 @@ begin
       begin
         try
           SaveBitmapsToAnimatedGIF(List.ToArray,'capture.gif');
+          RunConsoleCommand('magick capture.gif -layers optimize capture.gif');
         finally
           TThread.Queue(nil,
             procedure
