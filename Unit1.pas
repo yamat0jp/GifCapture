@@ -15,10 +15,13 @@ type
     Action1: TAction;
     Timer1: TTimer;
     Action2: TAction;
+    Action3: TAction;
+    Image1: TImage;
     procedure FormDestroy(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure Action1Execute(Sender: TObject);
     procedure Action2Execute(Sender: TObject);
+    procedure Action3Execute(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure Timer1Timer(Sender: TObject);
   private
@@ -129,25 +132,25 @@ end;
 
 procedure SaveBitmapsToAnimatedGIF(const Bitmaps: array of TBitmap; const FileName: string);
 var
-  GIF: TGIFImage;
   Frame: TGIFFrame;
 begin
   if Length(Bitmaps) = 0 then Exit;
 
-  GIF := TGIFImage.Create;
+  var GIF := TGIFImage.Create;
   try
     // GIFのベースとなるサイズを1枚目の画像に合わせる
     GIF.Width := Bitmaps[0].Width;
     GIF.Height := Bitmaps[0].Height;
 
-    Frame := nil;
     for var i := Low(Bitmaps) to High(Bitmaps) do
+    begin
       Frame := GIF.Add(Bitmaps[i]);
 
     // アニメーションのループ設定（0 = 無限ループ）
     // ※Netscape拡張ブロックを追加してループ回数を指定します
-    TGIFAppExtNSLoop.Create(Frame).Loops:=0;
-    TGIFGraphicControlExtension.Create(Frame).Delay:=50;
+      TGIFAppExtNSLoop.Create(Frame).Loops:=0;
+      TGIFGraphicControlExtension.Create(Frame).Delay:=50;
+    end;
 
     // GIFファイルとして書き出し
     GIF.SaveToFile(FileName);
@@ -179,6 +182,19 @@ end;
 procedure TForm1.Action2Execute(Sender: TObject);
 begin
   Close;
+end;
+
+procedure TForm1.Action3Execute(Sender: TObject);
+begin
+  if FileExists('capture.gif') then
+  begin
+    Image1.Picture.LoadFromFile('capture.gif');
+    with Image1.Picture.Graphic as TGifImage do
+    begin
+      Animate := true;
+      AnimateLoop := TGIFAnimationLoop.glEnabled;
+    end;
+  end;
 end;
 
 procedure TForm1.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
