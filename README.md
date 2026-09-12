@@ -17,3 +17,14 @@ ImageMagickをインストールしていれば最適化してくれるのでsco
 
 
 実行ファイルと同じフォルダにcapture.gifが作成されます。
+
+
+
+[作者連絡先]
+
+https://terukohietori.nrt.buttobi.net/　　　　https://sites.google.com/site/delphiuserhotkey/?pli=1&authuser=0
+
+https://imageviewer-site.web.app/app-store.html
+
+
+AIのジェミニをサブスクして近頃活発になっています。

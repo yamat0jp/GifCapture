@@ -47,7 +47,6 @@ object Form1: TForm1
     Font.Style = []
     ParentFont = False
     Spacing = 0
-    ExplicitWidth = 264
   end
   object ActionManager1: TActionManager
     ActionBars = <
@@ -55,6 +54,7 @@ object Form1: TForm1
         Items = <
           item
             Action = Action1
+            Caption = #23455#34892'(&X)'
           end
           item
             Action = Action3

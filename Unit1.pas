@@ -36,21 +36,19 @@ var
 
 implementation
 
+{$R *.dfm}
+
 uses Vcl.Imaging.GIFImg, System.Threading;
 
 const
   title = 'GIF Capture %s';
 
 var
-  task: ITask;
-
-{$R *.dfm}
+  [weak] task: ITask;
 
 // 画面全体をキャプチャしてTBitmapに返す関数
 function CaptureScreen: TBitmap;
 var
-  bmp: TBitmap;
-  DesktopCanvas: TCanvas;
   DC: HDC;
 begin
   Result := TBitmap.Create;
@@ -63,7 +61,7 @@ begin
     // デスクトップのデバイスコンテキスト(DC)を取得
     DC := GetDC(0);
     try
-      DesktopCanvas := TCanvas.Create;
+      var DesktopCanvas := TCanvas.Create;
       try
         DesktopCanvas.Handle := DC;
         // BitBltで画面のピクセルデータをTBitmapに高速コピー
@@ -75,7 +73,7 @@ begin
     finally
       ReleaseDC(0, DC);
     end;
-    bmp:=TBitmap.Create(Result.Width div 2, Result.Height div 2);
+    var bmp:=TBitmap.Create(Result.Width div 2, Result.Height div 2);
     try
       bmp.Canvas.StretchDraw(TRect.Create(0,0,bmp.Width,bmp.Height),Result);
       Result.Assign(bmp);
@@ -226,7 +224,6 @@ begin
           TThread.Queue(nil,
             procedure
             begin
-              task:=nil;
               Showmessage('完成');
               Caption:=Format(title,['']);
             end);
