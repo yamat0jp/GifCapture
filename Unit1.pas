@@ -26,7 +26,7 @@ type
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
   private
     { Private êÈåæ }
-    List: TObjectList<TBitmap>;
+    List: TObjectList<TGraphic>;
     fname: string;
     procedure CaptureScreenToImage(Sender: TImage);
   public
@@ -40,7 +40,7 @@ implementation
 
 {$R *.dfm}
 
-uses Vcl.Imaging.GIFImg, System.Threading, System.IOUtils, System.DateUtils,
+uses Vcl.Imaging.GIFImg, Vcl.Imaging.pngimage, System.Threading, System.IOUtils, System.DateUtils,
   Unit2;
 
 const
@@ -91,7 +91,7 @@ begin
   end;
 end;
 
-procedure SaveBitmapsToAnimatedGIF(const Bitmaps: array of TBitmap; const FileName: string);
+procedure SaveBitmapsToAnimatedGIF(const Bitmaps: array of TGraphic; const FileName: string);
 var
   Frame: TGIFFrame;
 begin
@@ -127,13 +127,12 @@ end;
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
-  List:=TObjectList<TBitmap>.Create;
+  List:=TObjectList<TGraphic>.Create;
 end;
 
 procedure TForm1.Action1Execute(Sender: TObject);
 var
-  s: string;
-  bool: Boolean;
+  s, path: string;
   y,m,d,hour,minute, second, msec: Word;
 begin
   if Assigned(task) then
@@ -144,55 +143,61 @@ begin
   List.Clear;
   DecodeDateTime(Now, y, m, d, hour, minute, second, msec);
   s:= Format('ScreenShot-%u-%u-%u-%u%u%u.gif', [y, m, d, hour, minute, second]);
-  fname := TPath.Combine(TPath.GetPicturesPath, 'ScreenShots',s);
+  path := TPath.Combine(TPath.GetPicturesPath, 'ScreenShots','GifShot');
+  fname := TPath.Combine(path,s);
+  if not TDirectory.Exists(path) then
+    TDirectory.CreateDirectory(path);
   if Action4.Checked and(Form2.ShowModal = mrCancel) then
     Exit;
 
   task := TTask.Run(
     procedure
     var
-      bmp: TBitmap;
+      png: TPngImage;
     begin
+      png:=nil;
       try
-        for var i := 1 to 10 do
+        var bmp:=TBitmap.Create;
+        for var i := 1 to 40 do
         begin
-          bmp := TBitmap.Create;
+          png := TPngImage.Create;
+          TThread.Synchronize(nil,
+            procedure
+            begin
+              CaptureScreenToImage(Image1);
+            end);
           if Action4.Checked then
           begin
-            TThread.Queue(nil,
-              procedure
-              begin
-                CaptureScreenToImage(Image1);
-              end);
-            bmp.Width := Form2.rect.Width;
-            bmp.Height := Form2.rect.Height;
+            bmp.SetSize(Form2.rect.Width,Form2.rect.Height);
             bmp.Canvas.CopyRect(TRect.Create(0, 0, bmp.Width, bmp.Height),
               Image1.Canvas, Form2.rect);
-            List.Add(bmp);
+            png.Assign(bmp);
+            List.Add(png);
           end
           else
           begin
-            TThread.Queue(nil,
-              procedure
-              begin
-                CaptureScreenToImage(Image1);
-              end);
-            bmp.Assign(Image1.Picture.Graphic);
-            List.Add(bmp);
+            png.Assign(Image1.Picture.Graphic);
+            List.Add(png);
           end;
-          Sleep(500);
+          Sleep(250);
         end;
-      except
         bmp.Free;
+      except
+        png.Free;
       end;
+      TThread.Queue(nil,
+        procedure
+        begin
+          Caption:=Format(title,['èàóùíÜ']);
+        end);
+      WindowState:=TWindowState.wsNormal;
       SaveBitmapsToAnimatedGIF(List.ToArray,fname);
-      RunConsoleCommand('magick capture.gif -layers optimize capture.gif');
+      RunConsoleCommand(Format('magick %s -layers optimize %s',[fname, fname]));
       TThread.Queue(nil,
         procedure
         begin
           Showmessage('äÆê¨');
           Caption:=Format(title,['']);
-          WindowState:=TWindowState.wsNormal;
           Image1.Show;
           Action3Execute(nil);
         end);

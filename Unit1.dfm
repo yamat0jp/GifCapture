@@ -54,6 +54,7 @@ object Form1: TForm1
         Items = <
           item
             Action = Action1
+            Caption = #23455#34892'(&W)'
           end
           item
             Action = Action4
