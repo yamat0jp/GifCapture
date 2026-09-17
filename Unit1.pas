@@ -13,20 +13,22 @@ type
     ActionManager1: TActionManager;
     ActionToolBar1: TActionToolBar;
     Action1: TAction;
-    Timer1: TTimer;
     Action2: TAction;
     Action3: TAction;
     Image1: TImage;
+    Action4: TAction;
     procedure FormDestroy(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure Action1Execute(Sender: TObject);
     procedure Action2Execute(Sender: TObject);
     procedure Action3Execute(Sender: TObject);
+    procedure Action4Execute(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
-    procedure Timer1Timer(Sender: TObject);
   private
     { Private 宣言 }
     List: TObjectList<TBitmap>;
+    fname: string;
+    procedure CaptureScreenToImage(Sender: TImage);
   public
     { Public 宣言 }
   end;
@@ -38,53 +40,14 @@ implementation
 
 {$R *.dfm}
 
-uses Vcl.Imaging.GIFImg, System.Threading;
+uses Vcl.Imaging.GIFImg, System.Threading, System.IOUtils, System.DateUtils,
+  Unit2;
 
 const
   title = 'GIF Capture %s';
 
 var
   [weak] task: ITask;
-
-// 画面全体をキャプチャしてTBitmapに返す関数
-function CaptureScreen: TBitmap;
-var
-  DC: HDC;
-begin
-  Result := TBitmap.Create;
-  try
-    // 画面の解像度を取得
-    Result.Width := Screen.Width;
-    Result.Height := Screen.Height;
-    Result.PixelFormat := pf16bit;
-
-    // デスクトップのデバイスコンテキスト(DC)を取得
-    DC := GetDC(0);
-    try
-      var DesktopCanvas := TCanvas.Create;
-      try
-        DesktopCanvas.Handle := DC;
-        // BitBltで画面のピクセルデータをTBitmapに高速コピー
-        BitBlt(Result.Canvas.Handle, 0, 0, Result.Width, Result.Height,
-               DesktopCanvas.Handle, 0, 0, SRCCOPY);
-      finally
-        DesktopCanvas.Free;
-      end;
-    finally
-      ReleaseDC(0, DC);
-    end;
-    var bmp:=TBitmap.Create(Result.Width div 2, Result.Height div 2);
-    try
-      bmp.Canvas.StretchDraw(TRect.Create(0,0,bmp.Width,bmp.Height),Result);
-      Result.Assign(bmp);
-    finally
-      bmp.Free;
-    end;
-  except
-    Result.Free;
-    raise;
-  end;
-end;
 
 function RunConsoleCommand(const Command: string): Boolean;
 var
@@ -168,13 +131,72 @@ begin
 end;
 
 procedure TForm1.Action1Execute(Sender: TObject);
+var
+  s: string;
+  bool: Boolean;
+  y,m,d,hour,minute, second, msec: Word;
 begin
   if Assigned(task) then
     Exit;
   Caption:=Format(title,['[録画中]']);
   WindowState:=TWindowState.wsMinimized;
+  Image1.Hide;
   List.Clear;
-  Timer1.Enabled:=true;
+  DecodeDateTime(Now, y, m, d, hour, minute, second, msec);
+  s:= Format('ScreenShot-%u-%u-%u-%u%u%u.gif', [y, m, d, hour, minute, second]);
+  fname := TPath.Combine(TPath.GetPicturesPath, 'ScreenShots',s);
+  if Action4.Checked and(Form2.ShowModal = mrCancel) then
+    Exit;
+
+  task := TTask.Run(
+    procedure
+    var
+      bmp: TBitmap;
+    begin
+      try
+        for var i := 1 to 10 do
+        begin
+          bmp := TBitmap.Create;
+          if Action4.Checked then
+          begin
+            TThread.Queue(nil,
+              procedure
+              begin
+                CaptureScreenToImage(Image1);
+              end);
+            bmp.Width := Form2.rect.Width;
+            bmp.Height := Form2.rect.Height;
+            bmp.Canvas.CopyRect(TRect.Create(0, 0, bmp.Width, bmp.Height),
+              Image1.Canvas, Form2.rect);
+            List.Add(bmp);
+          end
+          else
+          begin
+            TThread.Queue(nil,
+              procedure
+              begin
+                CaptureScreenToImage(Image1);
+              end);
+            bmp.Assign(Image1.Picture.Graphic);
+            List.Add(bmp);
+          end;
+          Sleep(500);
+        end;
+      except
+        bmp.Free;
+      end;
+      SaveBitmapsToAnimatedGIF(List.ToArray,fname);
+      RunConsoleCommand('magick capture.gif -layers optimize capture.gif');
+      TThread.Queue(nil,
+        procedure
+        begin
+          Showmessage('完成');
+          Caption:=Format(title,['']);
+          WindowState:=TWindowState.wsNormal;
+          Image1.Show;
+          Action3Execute(nil);
+        end);
+    end);
 end;
 
 procedure TForm1.Action2Execute(Sender: TObject);
@@ -184,14 +206,57 @@ end;
 
 procedure TForm1.Action3Execute(Sender: TObject);
 begin
-  if FileExists('capture.gif') then
+  if FileExists(fname) then
   begin
-    Image1.Picture.LoadFromFile('capture.gif');
+    Image1.Picture.LoadFromFile(fname);
     with Image1.Picture.Graphic as TGifImage do
     begin
       Animate := true;
       AnimateLoop := TGIFAnimationLoop.glEnabled;
     end;
+  end;
+end;
+
+procedure TForm1.Action4Execute(Sender: TObject);
+begin
+  //
+end;
+
+procedure TForm1.CaptureScreenToImage(Sender: TImage);
+var
+  DesktopDC, MemDC: HDC;
+  DesktopHandle: HWND;
+  Bitmap: TBitmap;
+  rect: TRect;
+begin
+  // デスクトップのハンドルを取得
+  DesktopHandle := GetDesktopWindow;
+  // デスクトップのデバイスコンテキスト（DC）を取得
+  DesktopDC := GetDC(DesktopHandle);
+  try
+    // デスクトップのサイズを取得
+    GetWindowRect(DesktopHandle, rect);
+
+    // メモリ上のデバイスコンテキストを作成
+    MemDC := CreateCompatibleDC(DesktopDC);
+
+    Bitmap := TBitmap.Create;
+    try
+      Bitmap.Width := rect.Width;
+      Bitmap.Height := rect.Height;
+
+      // ビットマップに描画
+      SelectObject(MemDC, Bitmap.Handle);
+      BitBlt(MemDC, 0, 0, rect.Width, rect.Height, DesktopDC, 0, 0, SRCCOPY);
+
+      // TImage に割り当てる
+      Sender.Picture.Assign(Bitmap);
+    finally
+      Bitmap.Free;
+      DeleteDC(MemDC);
+    end;
+  finally
+    ReleaseDC(DesktopHandle, DesktopDC);
   end;
 end;
 
@@ -201,34 +266,6 @@ begin
   begin
     CanClose:=false;
     Showmessage('動作中です');
-  end;
-end;
-
-procedure TForm1.Timer1Timer(Sender: TObject);
-begin
-  if List.Count < 10 then
-    List.Add(CaptureScreen)
-  else
-  begin
-    Caption:=Format(title,['[処理中]']);
-    WindowState:=TWindowState.wsNormal;
-    Application.ProcessMessages;
-    Timer1.Enabled:=false;
-    task:=TTask.Run(
-      procedure
-      begin
-        try
-          SaveBitmapsToAnimatedGIF(List.ToArray,'capture.gif');
-          RunConsoleCommand('magick capture.gif -layers optimize capture.gif');
-        finally
-          TThread.Queue(nil,
-            procedure
-            begin
-              Showmessage('完成');
-              Caption:=Format(title,['']);
-            end);
-        end;
-      end);
   end;
 end;
 

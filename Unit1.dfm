@@ -54,7 +54,13 @@ object Form1: TForm1
         Items = <
           item
             Action = Action1
-            Caption = #23455#34892'(&X)'
+          end
+          item
+            Action = Action4
+            Caption = #36984#25246#31684#22258'(&X)'
+          end
+          item
+            Caption = '-'
           end
           item
             Action = Action3
@@ -68,6 +74,8 @@ object Form1: TForm1
             Caption = #32066#20102'(&Y)'
           end>
         ActionBar = ActionToolBar1
+      end
+      item
       end>
     Left = 336
     Top = 72
@@ -84,12 +92,11 @@ object Form1: TForm1
       Caption = #32066#20102
       OnExecute = Action2Execute
     end
-  end
-  object Timer1: TTimer
-    Enabled = False
-    Interval = 500
-    OnTimer = Timer1Timer
-    Left = 240
-    Top = 72
+    object Action4: TAction
+      AutoCheck = True
+      Caption = #36984#25246#31684#22258
+      Checked = True
+      OnExecute = Action4Execute
+    end
   end
 end

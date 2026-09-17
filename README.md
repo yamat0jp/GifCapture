@@ -16,7 +16,7 @@ ImageMagickをインストールしていれば最適化してくれるのでsco
 
 
 
-実行ファイルと同じフォルダにcapture.gifが作成されます。
+PictureフォルダScreenShotsにgifファイルが作成されます。
 
 
 
