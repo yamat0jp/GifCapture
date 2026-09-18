@@ -148,7 +148,6 @@ begin
   if Assigned(task) then
     Exit;
   Caption:=Format(title,['[èÄîıíÜ]']);
-  Sleep(data.sleeptime);
   WindowState:=TWindowState.wsMinimized;
   Image1.Hide;
   List.Clear;
@@ -160,6 +159,8 @@ begin
     TDirectory.CreateDirectory(path);
   if Action4.Checked and(Form2.ShowModal = mrCancel) then
     Exit;
+  Sleep(data.sleeptime);
+  Caption:=Format(title,['éBâeíÜ']);
 
   task := TTask.Run(
     procedure
@@ -169,7 +170,7 @@ begin
       png:=nil;
       try
         var bmp:=TBitmap.Create;
-        for var i := 1 to data.shotsecond do
+        for var i := 1 to (data.shotsecond*1000) div data.shotcount do
         begin
           png := TPngImage.Create;
           TThread.Synchronize(nil,
