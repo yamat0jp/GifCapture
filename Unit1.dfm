@@ -64,6 +64,9 @@ object Form1: TForm1
             Caption = '-'
           end
           item
+            Action = Action5
+          end
+          item
             Action = Action3
             Caption = #38283#12367'(&Z)'
           end
@@ -98,6 +101,10 @@ object Form1: TForm1
       Caption = #36984#25246#31684#22258
       Checked = True
       OnExecute = Action4Execute
+    end
+    object Action5: TAction
+      Caption = #35373#23450
+      OnExecute = Action5Execute
     end
   end
 end

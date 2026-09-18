@@ -9,6 +9,10 @@ uses
   Vcl.ExtCtrls, System.Generics.Collections;
 
 type
+  TDataRecord = record
+    sleeptime, shotsecond, shotcount: integer;
+  end;
+
   TForm1 = class(TForm)
     ActionManager1: TActionManager;
     ActionToolBar1: TActionToolBar;
@@ -17,17 +21,20 @@ type
     Action3: TAction;
     Image1: TImage;
     Action4: TAction;
+    Action5: TAction;
     procedure FormDestroy(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure Action1Execute(Sender: TObject);
     procedure Action2Execute(Sender: TObject);
     procedure Action3Execute(Sender: TObject);
     procedure Action4Execute(Sender: TObject);
+    procedure Action5Execute(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
   private
     { Private êÈåæ }
     List: TObjectList<TGraphic>;
     fname: string;
+    data: TDataRecord;
     procedure CaptureScreenToImage(Sender: TImage);
   public
     { Public êÈåæ }
@@ -41,7 +48,7 @@ implementation
 {$R *.dfm}
 
 uses Vcl.Imaging.GIFImg, Vcl.Imaging.pngimage, System.Threading, System.IOUtils, System.DateUtils,
-  Unit2;
+  Unit2, OKCANCL2;
 
 const
   title = 'GIF Capture %s';
@@ -128,6 +135,9 @@ end;
 procedure TForm1.FormCreate(Sender: TObject);
 begin
   List:=TObjectList<TGraphic>.Create;
+  data.sleeptime:=3000;
+  data.shotsecond:=30;
+  data.shotcount:=250;
 end;
 
 procedure TForm1.Action1Execute(Sender: TObject);
@@ -137,7 +147,8 @@ var
 begin
   if Assigned(task) then
     Exit;
-  Caption:=Format(title,['[ò^âÊíÜ]']);
+  Caption:=Format(title,['[èÄîıíÜ]']);
+  Sleep(data.sleeptime);
   WindowState:=TWindowState.wsMinimized;
   Image1.Hide;
   List.Clear;
@@ -158,7 +169,7 @@ begin
       png:=nil;
       try
         var bmp:=TBitmap.Create;
-        for var i := 1 to 40 do
+        for var i := 1 to data.shotsecond do
         begin
           png := TPngImage.Create;
           TThread.Synchronize(nil,
@@ -172,14 +183,11 @@ begin
             bmp.Canvas.CopyRect(TRect.Create(0, 0, bmp.Width, bmp.Height),
               Image1.Canvas, Form2.rect);
             png.Assign(bmp);
-            List.Add(png);
           end
           else
-          begin
             png.Assign(Image1.Picture.Graphic);
-            List.Add(png);
-          end;
-          Sleep(250);
+          List.Add(png);
+          Sleep(data.shotcount);
         end;
         bmp.Free;
       except
@@ -225,6 +233,22 @@ end;
 procedure TForm1.Action4Execute(Sender: TObject);
 begin
   //
+end;
+
+procedure TForm1.Action5Execute(Sender: TObject);
+begin
+  with OKRightDlg do
+  begin
+    Updown1.Position:=data.sleeptime;
+    Updown2.Position:=data.shotsecond;
+    Updown3.Position:=data.shotcount;
+    if ShowModal = mrOK then
+    begin
+      data.sleeptime:=UpDown1.Position;
+      data.shotsecond:=UpDown2.Position;
+      data.shotcount:=UpDown3.Position;
+    end;
+  end;
 end;
 
 procedure TForm1.CaptureScreenToImage(Sender: TImage);

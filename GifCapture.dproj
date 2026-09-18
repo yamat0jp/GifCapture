@@ -131,6 +131,10 @@
             <Form>Form2</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="OKCANCL2.pas">
+            <Form>OKRightDlg</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <None Include="README.md"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

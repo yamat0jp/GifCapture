@@ -16,7 +16,7 @@ ImageMagickをインストールしていれば最適化してくれるのでsco
 
 
 
-PictureフォルダScreenShotsにgifファイルが作成されます。
+PictureフォルダScreenShots GifShot にgifファイルが作成されます。
 
 
 
