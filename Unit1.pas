@@ -117,7 +117,7 @@ begin
     // アニメーションのループ設定（0 = 無限ループ）
     // ※Netscape拡張ブロックを追加してループ回数を指定します
       TGIFAppExtNSLoop.Create(Frame).Loops:=0;
-      TGIFGraphicControlExtension.Create(Frame).Delay:=50;
+      TGIFGraphicControlExtension.Create(Frame).Delay:=Form1.data.shotcount div 10;
     end;
 
     // GIFファイルとして書き出し
@@ -148,7 +148,6 @@ begin
   if Assigned(task) then
     Exit;
   Caption:=Format(title,['[準備中]']);
-  WindowState:=TWindowState.wsMinimized;
   Image1.Hide;
   List.Clear;
   DecodeDateTime(Now, y, m, d, hour, minute, second, msec);
@@ -160,7 +159,9 @@ begin
   if Action4.Checked and(Form2.ShowModal = mrCancel) then
     Exit;
   Sleep(data.sleeptime);
+  WindowState:=TWindowState.wsMinimized;
   Caption:=Format(title,['撮影中']);
+  Sleep(200);
 
   task := TTask.Run(
     procedure

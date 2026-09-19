@@ -1,7 +1,7 @@
 object Form1: TForm1
   Left = 0
   Top = 0
-  BorderStyle = bsToolWindow
+  BorderStyle = bsSingle
   Caption = 'GifCapture'
   ClientHeight = 326
   ClientWidth = 452
@@ -65,6 +65,7 @@ object Form1: TForm1
           end
           item
             Action = Action5
+            Caption = #35373#23450'(&V)'
           end
           item
             Action = Action3

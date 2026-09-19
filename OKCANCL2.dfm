@@ -7,7 +7,7 @@ object OKRightDlg: TOKRightDlg
   ClientWidth = 384
   Color = clBtnFace
   ParentFont = True
-  Position = poScreenCenter
+  Position = poMainFormCenter
   TextHeight = 15
   object Bevel1: TBevel
     Left = 8
@@ -21,7 +21,7 @@ object OKRightDlg: TOKRightDlg
     Top = 88
     Width = 43
     Height = 15
-    Caption = 'ver 1.1.0'
+    Caption = 'ver 1.1.1'
   end
   object Label2: TLabel
     Left = 24
@@ -100,6 +100,7 @@ object OKRightDlg: TOKRightDlg
     Height = 23
     Associate = Edit1
     Max = 10000
+    Increment = 100
     TabOrder = 3
   end
   object Edit2: TEdit
@@ -134,6 +135,7 @@ object OKRightDlg: TOKRightDlg
     Associate = Edit3
     Min = 100
     Max = 750
+    Increment = 10
     Position = 100
     TabOrder = 7
   end
